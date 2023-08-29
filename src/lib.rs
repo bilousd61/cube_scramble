@@ -3,13 +3,19 @@ use std::fmt;
 use colored::*;
 
 #[derive(PartialEq)]
-struct Cube {
-    scan: [[char; 12]; 9]
+pub struct Cube {
+    pub scan: [[char; 12]; 9]
 }
 
 impl fmt::Debug for Cube {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        let mut result = "\n  0 2 4 6 8 10".to_string();
+        let string = format!("{}", self);
+        let result_chars: Vec<_> = string.lines().collect();
+        for i in 1..result_chars.len() {
+            result = format!("{}\n{} {}", result, i - 1, result_chars[i]);
+        }
+        return write!(f, "{}", result);
     }
 }
 
@@ -110,21 +116,37 @@ impl Cube {
         direction_inv.reverse();
         self.rotate_by_start_and_direction(start_inv, direction_inv);
     }
-    fn rotate_front(&mut self) {
+    pub fn rotate_front(&mut self) {
         self.rotate_center(CENTER_FRONT);
         self.rotate_by_start_and_direction(ROTATE_FRONT, DIRECTION_FRONT);
     }
-    fn rotate_front_inv(&mut self) {
+    pub fn rotate_front_inv(&mut self) {
         self.rotate_center_inv(CENTER_FRONT);
         self.rotate_by_start_and_direction_inv(ROTATE_FRONT, DIRECTION_FRONT);
     }
-    fn rotate_rigth(&mut self) {
+    pub fn rotate_rigth(&mut self) {
         self.rotate_center(CENTER_RIGTH);
         self.rotate_by_start_and_direction(ROTATE_RIGTH, DIRECTION_RIGTH);
     }
-    fn rotate_rigth_inv(&mut self) {
+    pub fn rotate_rigth_inv(&mut self) {
         self.rotate_center_inv(CENTER_RIGTH);
         self.rotate_by_start_and_direction_inv(ROTATE_RIGTH, DIRECTION_RIGTH);
+    }
+    pub fn rotate_up(&mut self) {
+        self.rotate_center(CENTER_UP);
+        self.rotate_by_start_and_direction(ROTATE_UP, DIRECTION_UP);
+    }
+    pub fn rotate_up_inv(&mut self) {
+        self.rotate_center_inv(CENTER_UP);
+        self.rotate_by_start_and_direction_inv(ROTATE_UP, DIRECTION_UP);
+    }
+    pub fn rotate_left(&mut self) {
+        self.rotate_center(CENTER_LEFT);
+        self.rotate_by_start_and_direction(ROTATE_LEFT, DIRECTION_LEFT);
+    }
+    pub fn rotate_left_inv(&mut self) {
+        self.rotate_center_inv(CENTER_LEFT);
+        self.rotate_by_start_and_direction_inv(ROTATE_LEFT, DIRECTION_LEFT);
     }
 }
 
@@ -142,22 +164,37 @@ const ROTATE_RIGTH: [(isize, isize); 4] = [
 const DIRECTION_RIGTH: [(isize, isize); 4] = [
     (-1, 0), (1, 0), (1, 0), (1, 0)
 ];
+const CENTER_UP: (usize, usize) = (1, 4);
+const ROTATE_UP: [(isize, isize); 4] = [
+    (3, 0), (3, 3), (3, 6), (3, 9)
+];
+const DIRECTION_UP: [(isize, isize); 4] = [
+    (0, 1); 4
+];
+const CENTER_LEFT: (usize, usize) = (4, 1);
+const ROTATE_LEFT: [(isize, isize); 4] = [
+    (6, 3), (3, 3), (0, 3), (5, 11)  
+];
+const DIRECTION_LEFT: [(isize, isize); 4] = [
+    (1, 0), (1, 0), (1, 0), (-1, 0)
+];
 
 #[cfg(test)]
 mod test {
     use super::*;
     
+    // R2 D L2 B2 L2 U B2 D B2 U' L R' D R' B D' F L2 D F
     const SCRAMBLED_SCAN: [[char; 12]; 9] = [
-            [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
-            [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
-            [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
-            ['y','r','b','y','r','y','g','o','b','o','w','g'],
-            ['w','o','g','o','b','w','b','r','g','r','g','r'],
-            ['r','g','w','r','b','w','b','b','o','w','y','y'],
-            [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
-            [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
-            [' ',' ',' ','b','o','g',' ',' ',' ',' ',' ',' '],
-        ];
+        [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
+        [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
+        [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
+        ['y','r','b','y','r','y','g','o','b','o','w','g'],
+        ['w','o','g','o','b','w','b','r','g','r','g','r'],
+        ['r','g','w','r','b','w','b','b','o','w','y','y'],
+        [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
+        [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
+        [' ',' ',' ','b','o','g',' ',' ',' ',' ',' ',' '],
+    ];
     
     #[test]
     fn check_default() {
@@ -241,5 +278,56 @@ mod test {
             [' ',' ',' ','y','w','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','o','w',' ',' ',' ',' ',' ',' '],
         ] })
+    }
+
+    #[test]
+    fn check_rotate_up() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_up();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','o','b','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','y','g',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','w','w',' ',' ',' ',' ',' ',' '],
+            ['y','r','y','g','o','b','o','w','g','y','r','b'],
+            ['w','o','g','o','b','w','b','r','g','r','g','r'],
+            ['r','g','w','r','b','w','b','b','o','w','y','y'],
+            [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','o','g',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
+
+    #[test]
+    fn check_rotate_up_inv() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_up_inv();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','w','w','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','g','y','y',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','r','b','o',' ',' ',' ',' ',' ',' '],
+            ['o','w','g','y','r','b','y','r','y','g','o','b'],
+            ['w','o','g','o','b','w','b','r','g','r','g','r'],
+            ['r','g','w','r','b','w','b','b','o','w','y','y'],
+            [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','o','g',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
+
+    #[test]
+    fn check_rotate_left() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_left();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','y','g','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','r','y','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','g','y','o',' ',' ',' ',' ',' ',' '],
+            ['r','w','y','r','r','y','g','o','b','o','w','b'],
+            ['g','o','r','b','b','w','b','r','g','r','g','y'],
+            ['w','g','b','o','b','w','b','b','o','w','y','g'],
+            [' ',' ',' ','y','y','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','w','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','r','o','g',' ',' ',' ',' ',' ',' '],
+        ] });
     }
 }
