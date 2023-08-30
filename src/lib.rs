@@ -148,6 +148,23 @@ impl Cube {
         self.rotate_center_inv(CENTER_LEFT);
         self.rotate_by_start_and_direction_inv(ROTATE_LEFT, DIRECTION_LEFT);
     }
+    pub fn rotate_down(&mut self) {
+        self.rotate_center(CENTER_DOWN);
+        self.rotate_by_start_and_direction(ROTATE_DOWN, DIRECTION_DOWN);
+    }
+    pub fn rotate_down_inv(&mut self) {
+        self.rotate_center_inv(CENTER_DOWN);
+        self.rotate_by_start_and_direction_inv(ROTATE_DOWN, DIRECTION_DOWN);
+    }
+    pub fn rotate_back(&mut self) {
+        self.rotate_center(CENTER_BACK);
+        self.rotate_by_start_and_direction(ROTATE_BACK, DIRECTION_BACK);
+    }
+    pub fn rotate_back_inv(&mut self) {
+        self.rotate_center_inv(CENTER_BACK);
+        self.rotate_by_start_and_direction_inv(ROTATE_BACK, DIRECTION_BACK);
+    }
+
 }
 
 const CENTER_FRONT: (usize, usize) = (4, 4);
@@ -177,6 +194,20 @@ const ROTATE_LEFT: [(isize, isize); 4] = [
 ];
 const DIRECTION_LEFT: [(isize, isize); 4] = [
     (1, 0), (1, 0), (1, 0), (-1, 0)
+];
+const CENTER_DOWN: (usize, usize) = (7, 4);
+const ROTATE_DOWN: [(isize, isize); 4] = [
+    (5, 9), (5, 6), (5, 3), (5, 0)
+];
+const DIRECTION_DOWN: [(isize, isize); 4] = [
+    (0, 1); 4
+];
+const CENTER_BACK: (usize, usize) = (4, 10);
+const ROTATE_BACK: [(isize, isize); 4] = [
+    (3, 8), (8, 5), (5, 0), (0, 3)
+];
+const DIRECTION_BACK: [(isize, isize); 4] = [
+    (1, 0), (0, -1), (-1, 0), (0, 1)
 ];
 
 #[cfg(test)]
@@ -330,4 +361,90 @@ mod test {
             [' ',' ',' ','r','o','g',' ',' ',' ',' ',' ',' '],
         ] });
     }
+    
+    #[test]
+    fn check_rotate_left_inv() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_left_inv();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','y','g','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','y','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','r','y','o',' ',' ',' ',' ',' ',' '],
+            ['b','g','w','g','r','y','g','o','b','o','w','o'],
+            ['r','o','g','y','b','w','b','r','g','r','g','b'],
+            ['y','w','r','b','b','w','b','b','o','w','y','r'],
+            [' ',' ',' ','y','y','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','r','w','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','g','o','g',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
+
+    #[test]
+    fn check_rotate_down() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_down();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
+            ['y','r','b','y','r','y','g','o','b','o','w','g'],
+            ['w','o','g','o','b','w','b','r','g','r','g','r'],
+            ['w','y','y','r','g','w','r','b','w','b','b','o'],
+            [' ',' ',' ','b','y','g',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','w','y',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','g','o','r',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
+
+    #[test]
+    fn check_rotate_down_inv() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_down_inv();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
+            ['y','r','b','y','r','y','g','o','b','o','w','g'],
+            ['w','o','g','o','b','w','b','r','g','r','g','r'],
+            ['r','b','w','b','b','o','w','y','y','r','g','w'],
+            [' ',' ',' ','r','o','g',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','g','y','b',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
+
+    #[test]
+    fn check_rotate_back() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_back();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','b','g','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
+            ['w','r','b','y','r','y','g','o','g','w','r','o'],
+            ['g','o','g','o','b','w','b','r','o','y','g','w'],
+            ['r','g','w','r','b','w','b','b','b','y','r','g'],
+            [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','w','r',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
+
+    #[test]
+    fn check_rotate_back_inv() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_back_inv();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','r','w','y',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
+            ['b','r','b','y','r','y','g','o','r','g','r','y'],
+            ['o','o','g','o','b','w','b','r','g','w','g','y'],
+            ['g','g','w','r','b','w','b','b','w','o','r','w'],
+            [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','g','b',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
+
 }
