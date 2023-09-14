@@ -15,7 +15,7 @@ impl fmt::Debug for Cube {
         for i in 1..result_chars.len() {
             result = format!("{}\n{} {}", result, i - 1, result_chars[i]);
         }
-        return write!(f, "{}", result);
+        write!(f, "{}", result)
     }
 }
 
@@ -38,7 +38,7 @@ impl fmt::Display for Cube {
             }
             result.push('\n');
         }
-        return write!(f, "{}", result)
+        write!(f, "{}", result)
     }
 }
 
@@ -84,7 +84,7 @@ impl Cube {
     }
     fn rotate_center_inv(&mut self, center: (usize, usize)) {
         for mut instr in instr_by_center(center) {
-            let _ = instr.reverse();
+            instr.reverse();
             self.rotate_by_instr(instr);
         }
     }
@@ -164,7 +164,47 @@ impl Cube {
         self.rotate_center_inv(CENTER_BACK);
         self.rotate_by_start_and_direction_inv(ROTATE_BACK, DIRECTION_BACK);
     }
+    pub fn rotate_middle(&mut self) {
+        self.rotate_by_start_and_direction(ROTATE_MIDDLE, DIRECTION_MIDDLE);
+    }
+    pub fn rotate_middle_inv(&mut self) {
+        self.rotate_by_start_and_direction_inv(ROTATE_MIDDLE, DIRECTION_MIDDLE);
+    }
+} 
 
+impl Cube {
+    fn from(string: impl Into<String>) -> Self {
+        let mut cube = Cube { ..Default::default() };
+        let borrow = string.into();
+        let notes = borrow.split_whitespace();
+        for note in notes {
+            match note {
+                "R"             => cube.rotate_rigth(),
+                "R'"            => cube.rotate_rigth_inv(),
+                "R2" | "R2'"    => for _ in 0..2 { cube.rotate_rigth() },
+                "L"             => cube.rotate_left(),
+                "L'"            => cube.rotate_left_inv(),
+                "L2" | "L2'"    => for _ in 0..2 { cube.rotate_left() },
+                "U"             => cube.rotate_up(),
+                "U'"            => cube.rotate_up_inv(),
+                "U2" | "U2'"    => for _ in 0..2 { cube.rotate_up() },
+                "F"             => cube.rotate_front(),
+                "F'"            => cube.rotate_front_inv(),
+                "F2" | "F2'"    => for _ in 0..2 { cube.rotate_front() },
+                "D"             => cube.rotate_down(),
+                "D'"            => cube.rotate_down_inv(),
+                "D2" | "D2'"    => for _ in 0..2 { cube.rotate_down() },
+                "B"             => cube.rotate_back(),
+                "B'"            => cube.rotate_back_inv(),
+                "B2" | "B2'"    => for _ in 0..2 { cube.rotate_back() },
+                "M"             => cube.rotate_middle(),
+                "M'"            => cube.rotate_middle_inv(),
+                "M2" | "M2'"    => for _ in 0..2 { cube.rotate_middle() }
+                _ => ()
+            }
+        }
+        cube
+    }
 }
 
 const CENTER_FRONT: (usize, usize) = (4, 4);
@@ -174,6 +214,7 @@ const ROTATE_FRONT: [(isize, isize); 4] = [
 const DIRECTION_FRONT: [(isize, isize); 4] = [
     (0, -1), (1, 0), (0, 1), (-1, 0)
 ];
+
 const CENTER_RIGTH: (usize, usize) = (4, 7);
 const ROTATE_RIGTH: [(isize, isize); 4] = [
     (5, 9), (0, 5), (3, 5), (6, 5)
@@ -181,6 +222,7 @@ const ROTATE_RIGTH: [(isize, isize); 4] = [
 const DIRECTION_RIGTH: [(isize, isize); 4] = [
     (-1, 0), (1, 0), (1, 0), (1, 0)
 ];
+
 const CENTER_UP: (usize, usize) = (1, 4);
 const ROTATE_UP: [(isize, isize); 4] = [
     (3, 0), (3, 3), (3, 6), (3, 9)
@@ -188,6 +230,7 @@ const ROTATE_UP: [(isize, isize); 4] = [
 const DIRECTION_UP: [(isize, isize); 4] = [
     (0, 1); 4
 ];
+
 const CENTER_LEFT: (usize, usize) = (4, 1);
 const ROTATE_LEFT: [(isize, isize); 4] = [
     (6, 3), (3, 3), (0, 3), (5, 11)  
@@ -195,6 +238,7 @@ const ROTATE_LEFT: [(isize, isize); 4] = [
 const DIRECTION_LEFT: [(isize, isize); 4] = [
     (1, 0), (1, 0), (1, 0), (-1, 0)
 ];
+
 const CENTER_DOWN: (usize, usize) = (7, 4);
 const ROTATE_DOWN: [(isize, isize); 4] = [
     (5, 9), (5, 6), (5, 3), (5, 0)
@@ -202,12 +246,20 @@ const ROTATE_DOWN: [(isize, isize); 4] = [
 const DIRECTION_DOWN: [(isize, isize); 4] = [
     (0, 1); 4
 ];
+
 const CENTER_BACK: (usize, usize) = (4, 10);
 const ROTATE_BACK: [(isize, isize); 4] = [
     (3, 8), (8, 5), (5, 0), (0, 3)
 ];
 const DIRECTION_BACK: [(isize, isize); 4] = [
     (1, 0), (0, -1), (-1, 0), (0, 1)
+];
+
+const ROTATE_MIDDLE: [(isize, isize); 4] = [
+    (6, 4), (3, 4), (0, 4), (5, 10)
+];
+const DIRECTION_MIDDLE: [(isize, isize); 4] = [
+    (1, 0), (1, 0), (1, 0), (-1, 0)
 ];
 
 #[cfg(test)]
@@ -241,6 +293,12 @@ mod test {
             [' ',' ',' ','w','w','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','w','w','w',' ',' ',' ',' ',' ',' '],
         ] });
+    }
+
+    #[test]
+    fn check_from() {
+        let cube = Cube::from("R2 D L2 B2 L2 U B2 D B2 U' L R' D R' B D' F L2 D F");
+        assert_eq!(cube , Cube { scan: SCRAMBLED_SCAN });
     }
 
     #[test]
@@ -447,4 +505,37 @@ mod test {
         ] });
     }
 
+    #[test]
+    fn check_rotate_middle() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_middle();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','r','y','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','g','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','w','o',' ',' ',' ',' ',' ',' '],
+            ['y','r','b','y','g','y','g','o','b','o','o','g'],
+            ['w','o','g','o','y','w','b','r','g','r','w','r'],
+            ['r','g','w','r','y','w','b','b','o','w','y','y'],
+            [' ',' ',' ','g','r','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','b','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','b','g',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
+
+    #[test]
+    fn check_rotate_middle_inv() {
+        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        cube_scrambled.rotate_middle_inv();
+        assert_eq!(cube_scrambled, Cube { scan: [
+            [' ',' ',' ','r','r','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','b','w',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','o','b','o',' ',' ',' ',' ',' ',' '],
+            ['y','r','b','y','y','y','g','o','b','o','y','g'],
+            ['w','o','g','o','w','w','b','r','g','r','y','r'],
+            ['r','g','w','r','o','w','b','b','o','w','g','y'],
+            [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','y','g','o',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ','b','w','g',' ',' ',' ',' ',' ',' '],
+        ] });
+    }
 }
