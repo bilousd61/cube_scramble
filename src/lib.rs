@@ -1,10 +1,52 @@
 #![allow(dead_code)]
 use std::fmt;
 use colored::*;
+use Stiker::*;
+
+#[derive(PartialEq, Clone, Copy)]
+pub enum Stiker {
+    B,  // Blue
+    R,  // Red
+    Y,  // Yellow
+    O,  // Orange
+    G,  // Green
+    W,  // White
+    V   // Void
+}
+
+impl Into<Stiker> for char {
+    fn into(self) -> Stiker {
+        match self {
+            'b' => B,
+            'r' => R,
+            'y' => Y,
+            'o' => O,
+            'g' => G,
+            'w' => W,
+            _ => V
+        }
+    }
+}
+
+impl Into<char> for Stiker {
+    fn into(self) -> char {
+        match self {
+            B => 'b',
+            R => 'r',
+            Y => 'y',
+            O => 'o',
+            G => 'g',
+            W => 'w',
+            V => ' '
+        }
+    }
+}
+
+type Scan = [[Stiker; 12]; 9];
 
 #[derive(PartialEq)]
 pub struct Cube {
-    pub scan: [[char; 12]; 9]
+    pub scan: Scan
 }
 
 impl fmt::Debug for Cube {
@@ -24,15 +66,14 @@ impl fmt::Display for Cube {
         let mut result = "\n".to_string();
         for layer in self.scan {
             for letter in layer {
-                let letter_string = letter.to_string();
-                let letter_str = letter_string.trim();
-                result = format!("{}{}", result, match letter_str {
-                    "b" => letter_str.blue(),
-                    "r" => letter_str.red(),
-                    "y" => letter_str.truecolor(255, 255, 0),
-                    "o" => letter_str.truecolor(255, 135, 0),
-                    "g" => letter_str.green(),
-                    "w" => letter_str.white(),
+                let letter_char: char = letter.into();
+                result = format!("{}{}", result, match letter_char {
+                    'b' => "b".blue(),
+                    'r' => "r".red(),
+                    'y' => "y".truecolor(255, 255, 0),
+                    'o' => "o".truecolor(255, 135, 0),
+                    'g' => "g".green(),
+                    'w' => "w".white(),
                     _ => " ".normal()
                 })
             }
@@ -44,7 +85,7 @@ impl fmt::Display for Cube {
 
 impl Default for Cube {
     fn default() -> Self {
-        Cube { scan: [
+        Cube::from_scan([
             [' ',' ',' ','y','y','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','y','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','y','y',' ',' ',' ',' ',' ',' '],
@@ -54,7 +95,50 @@ impl Default for Cube {
             [' ',' ',' ','w','w','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','w','w','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','w','w','w',' ',' ',' ',' ',' ',' '],
-        ] }
+        ])
+    }
+}
+
+impl Cube {
+    fn from(string: impl Into<String>) -> Self {
+        let mut cube = Cube::default();
+        let borrow = string.into();
+        let notes = borrow.split_whitespace();
+        for note in notes {
+            match note {
+                "R"             => cube.rotate_rigth(),
+                "R'"            => cube.rotate_rigth_inv(),
+                "R2" | "R2'"    => for _ in 0..2 { cube.rotate_rigth() },
+                "L"             => cube.rotate_left(),
+                "L'"            => cube.rotate_left_inv(),
+                "L2" | "L2'"    => for _ in 0..2 { cube.rotate_left() },
+                "U"             => cube.rotate_up(),
+                "U'"            => cube.rotate_up_inv(),
+                "U2" | "U2'"    => for _ in 0..2 { cube.rotate_up() },
+                "F"             => cube.rotate_front(),
+                "F'"            => cube.rotate_front_inv(),
+                "F2" | "F2'"    => for _ in 0..2 { cube.rotate_front() },
+                "D"             => cube.rotate_down(),
+                "D'"            => cube.rotate_down_inv(),
+                "D2" | "D2'"    => for _ in 0..2 { cube.rotate_down() },
+                "B"             => cube.rotate_back(),
+                "B'"            => cube.rotate_back_inv(),
+                "B2" | "B2'"    => for _ in 0..2 { cube.rotate_back() },
+                "M"             => cube.rotate_middle(),
+                "M'"            => cube.rotate_middle_inv(),
+                "M2" | "M2'"    => for _ in 0..2 { cube.rotate_middle() }
+                _ => ()
+            }
+        }
+        cube
+    }
+}
+
+impl Cube {
+    fn from_scan(inner_scan: [[char; 12]; 9]) -> Self {
+        Cube {
+            scan: inner_scan.map(|x| x.map(|x| x.into()))
+        }
     }
 }
 
@@ -172,41 +256,6 @@ impl Cube {
     }
 } 
 
-impl Cube {
-    fn from(string: impl Into<String>) -> Self {
-        let mut cube = Cube { ..Default::default() };
-        let borrow = string.into();
-        let notes = borrow.split_whitespace();
-        for note in notes {
-            match note {
-                "R"             => cube.rotate_rigth(),
-                "R'"            => cube.rotate_rigth_inv(),
-                "R2" | "R2'"    => for _ in 0..2 { cube.rotate_rigth() },
-                "L"             => cube.rotate_left(),
-                "L'"            => cube.rotate_left_inv(),
-                "L2" | "L2'"    => for _ in 0..2 { cube.rotate_left() },
-                "U"             => cube.rotate_up(),
-                "U'"            => cube.rotate_up_inv(),
-                "U2" | "U2'"    => for _ in 0..2 { cube.rotate_up() },
-                "F"             => cube.rotate_front(),
-                "F'"            => cube.rotate_front_inv(),
-                "F2" | "F2'"    => for _ in 0..2 { cube.rotate_front() },
-                "D"             => cube.rotate_down(),
-                "D'"            => cube.rotate_down_inv(),
-                "D2" | "D2'"    => for _ in 0..2 { cube.rotate_down() },
-                "B"             => cube.rotate_back(),
-                "B'"            => cube.rotate_back_inv(),
-                "B2" | "B2'"    => for _ in 0..2 { cube.rotate_back() },
-                "M"             => cube.rotate_middle(),
-                "M'"            => cube.rotate_middle_inv(),
-                "M2" | "M2'"    => for _ in 0..2 { cube.rotate_middle() }
-                _ => ()
-            }
-        }
-        cube
-    }
-}
-
 const CENTER_FRONT: (usize, usize) = (4, 4);
 const ROTATE_FRONT: [(isize, isize); 4] = [
     (2, 5), (3, 2), (6, 3), (5, 6)
@@ -281,8 +330,8 @@ mod test {
     
     #[test]
     fn check_default() {
-        let cube = Cube { ..Default::default() };
-        assert_eq!(cube, Cube { scan: [
+        let cube = Cube::default();
+        assert_eq!(cube, Cube::from_scan([
             [' ',' ',' ','y','y','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','y','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','y','y',' ',' ',' ',' ',' ',' '],
@@ -292,20 +341,20 @@ mod test {
             [' ',' ',' ','w','w','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','w','w','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','w','w','w',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_from() {
         let cube = Cube::from("R2 D L2 B2 L2 U B2 D B2 U' L R' D R' B D' F L2 D F");
-        assert_eq!(cube , Cube { scan: SCRAMBLED_SCAN });
+        assert_eq!(cube , Cube::from_scan(SCRAMBLED_SCAN));
     }
 
     #[test]
     fn check_rotate_front() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_front();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','w','g','b',' ',' ',' ',' ',' ',' '],
@@ -315,14 +364,14 @@ mod test {
             [' ',' ',' ','b','b','g',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','o','g',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
     
     #[test]
     fn check_rotate_front_inv() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_front_inv();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','g','b','b',' ',' ',' ',' ',' ',' '],
@@ -332,14 +381,14 @@ mod test {
             [' ',' ',' ','b','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','o','g',' ',' ',' ',' ',' ',' '],    
-        ] });
+        ]))
     }
 
     #[test]
     fn check_rotate_rigth() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_rigth();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','g','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','y','w',' ',' ',' ',' ',' ',' '],
@@ -349,14 +398,14 @@ mod test {
             [' ',' ',' ','g','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','o','o',' ',' ',' ',' ',' ',' '],
-        ] })
+        ]))
     }
 
     #[test]
     fn check_rotate_right_inv() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_rigth_inv();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','y','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
@@ -366,14 +415,14 @@ mod test {
             [' ',' ',' ','g','y','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','o','w',' ',' ',' ',' ',' ',' '],
-        ] })
+        ]))
     }
 
     #[test]
     fn check_rotate_up() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_up();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','o','b','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','y','g',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','w','w',' ',' ',' ',' ',' ',' '],
@@ -383,14 +432,14 @@ mod test {
             [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','o','g',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_rotate_up_inv() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_up_inv();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','w','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','g','y','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','r','b','o',' ',' ',' ',' ',' ',' '],
@@ -400,14 +449,14 @@ mod test {
             [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','o','g',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_rotate_left() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_left();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','y','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','r','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','g','y','o',' ',' ',' ',' ',' ',' '],
@@ -417,14 +466,14 @@ mod test {
             [' ',' ',' ','y','y','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','r','o','g',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
     
     #[test]
     fn check_rotate_left_inv() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_left_inv();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','y','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','r','y','o',' ',' ',' ',' ',' ',' '],
@@ -434,14 +483,14 @@ mod test {
             [' ',' ',' ','y','y','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','r','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','g','o','g',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_rotate_down() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_down();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
@@ -451,14 +500,14 @@ mod test {
             [' ',' ',' ','b','y','g',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','w','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','g','o','r',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_rotate_down_inv() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_down_inv();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
@@ -468,14 +517,14 @@ mod test {
             [' ',' ',' ','r','o','g',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','g','y','b',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_rotate_back() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_back();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','b','g','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
@@ -485,14 +534,14 @@ mod test {
             [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','r',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_rotate_back_inv() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_back_inv();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','w','y',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','y','o',' ',' ',' ',' ',' ',' '],
@@ -502,14 +551,14 @@ mod test {
             [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','w','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','g','b',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_rotate_middle() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_middle();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','y','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','g','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','w','o',' ',' ',' ',' ',' ',' '],
@@ -519,14 +568,14 @@ mod test {
             [' ',' ',' ','g','r','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','b','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','b','g',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 
     #[test]
     fn check_rotate_middle_inv() {
-        let mut cube_scrambled = Cube { scan: SCRAMBLED_SCAN };
+        let mut cube_scrambled = Cube::from_scan(SCRAMBLED_SCAN);
         cube_scrambled.rotate_middle_inv();
-        assert_eq!(cube_scrambled, Cube { scan: [
+        assert_eq!(cube_scrambled, Cube::from_scan([
             [' ',' ',' ','r','r','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','b','w',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','o','b','o',' ',' ',' ',' ',' ',' '],
@@ -536,6 +585,6 @@ mod test {
             [' ',' ',' ','g','y','r',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','y','g','o',' ',' ',' ',' ',' ',' '],
             [' ',' ',' ','b','w','g',' ',' ',' ',' ',' ',' '],
-        ] });
+        ]));
     }
 }
